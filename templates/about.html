@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About - AI Emotion Predictor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const toggleButton = document.querySelector('[data-collapse-toggle="navbar-sticky"]');
+      const menu = document.getElementById('navbar-sticky');
+
+      toggleButton.addEventListener('click', function () {
+        if (menu.classList.contains('hidden')) {
+          menu.classList.remove('hidden');
+        } else {
+          menu.classList.add('hidden');
+        }
+      });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const chatbotIcon = document.getElementById('chatbot-icon');
+      const chatbotContainer = document.getElementById('chatbot-container');
+      const chatbotClose = document.getElementById('chatbot-close');
+      const chatbotInput = document.getElementById('chatbot-input');
+      const chatbotContent = document.getElementById('chatbot-content');
+
+      // Toggle chatbot visibility
+      chatbotIcon.addEventListener('click', function () {
+        chatbotContainer.classList.toggle('hidden');
+      });
+
+      chatbotClose.addEventListener('click', function () {
+        chatbotContainer.classList.add('hidden');
+      });
+
+      // Handle message sending
+      chatbotInput.addEventListener('keypress', async function (e) {
+        if (e.key === 'Enter' && chatbotInput.value.trim() !== '') {
+          const message = chatbotInput.value.trim();
+          appendUserMessage(message);
+          chatbotInput.value = '';
+
+          // Send the message to the Flask backend
+          try {
+            const response = await fetch('/chatbot', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ message: message }),
+            });
+
+            const data = await response.json();
+            if (data.error) {
+              appendBotMessage('Sorry, I encountered an error.');
+            } else {
+              appendBotMessage(data.response);
+            }
+          } catch (error) {
+            console.error('Error fetching response:', error);
+            appendBotMessage('Sorry, I encountered an error.');
+          }
+        }
+      });
+
+      function appendUserMessage(message) {
+        const userMessage = document.createElement('div');
+        userMessage.classList.add('mb-2', 'text-right');
+        userMessage.innerHTML = `<div class="inline-block bg-blue-500 text-white rounded-lg px-4 py-2">${message}</div>`;
+        chatbotContent.appendChild(userMessage);
+        chatbotContent.scrollTop = chatbotContent.scrollHeight;
+      }
+
+      function appendBotMessage(message) {
+        const botMessage = document.createElement('div');
+        botMessage.classList.add('mb-2', 'text-left');
+        botMessage.innerHTML = `<div class="inline-block bg-gray-200 text-black rounded-lg px-4 py-2">${message}</div>`;
+        chatbotContent.appendChild(botMessage);
+        chatbotContent.scrollTop = chatbotContent.scrollHeight;
+      }
+    });
+  </script>
+</head>
+
+<body class="bg-white min-h-screen flex flex-col bg-gradient-to-b from-purple-300 to-white h-full">
+  <!-- Navbar -->
+  <nav class="fixed w-full z-20 top-0 start-0 shadow-md">
+    <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+      <a href="{{ url_for('index') }}" class="flex items-center space-x-3 rtl:space-x-reverse">
+        <span class="self-center text-2xl font-semibold whitespace-nowrap text-gray-900">AI Emotion Predictor</span>
+      </a>
+      <div class="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('logout') }}"
+          class="inline-block px-6 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-800">Logout</a>
+        {% else %}
+        <a href="{{ url_for('login') }}"
+          class="hidden md:inline-block px-6 py-2 bg-black text-white font-medium rounded-md hover:bg-gray-800">Get
+          Started</a>
+        {% endif %}
+        <button data-collapse-toggle="navbar-sticky" type="button"
+          class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+          aria-controls="navbar-sticky" aria-expanded="false">
+          <span class="sr-only">Open main menu</span>
+          <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M1 1h15M1 7h15M1 13h15" />
+          </svg>
+        </button>
+      </div>
+      <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-sticky">
+        <ul
+          class="flex flex-col p-4 md:p-0 mt-4 font-medium border border-gray-100 rounded-lg md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0">
+          <li>
+            <a href="{{ url_for('image_prediction') }}"
+              class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-black md:p-0">Emotion
+              Prediction through Image</a>
+          </li>
+          <li>
+            <a href="{{ url_for('text_prediction') }}"
+              class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-black md:p-0">Emotion
+              Prediction through Text</a>
+          </li>
+          <li>
+            <a href="{{ url_for('about') }}"
+              class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-black md:p-0">About</a>
+          </li>
+          <li>
+            <a href="{{ url_for('support') }}"
+              class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-black md:p-0">Support</a>
+          </li>
+          <li>
+            <a href="{{ url_for('faq') }}"
+              class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-black md:p-0">FAQs</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-grow container mx-auto px-4 py-8 mt-20">
+    <h1 class="text-4xl font-bold mb-4">About</h1>
+    <div class="flex flex-col md:flex-row justify-between">
+      <div class="md:w-3/4 mb-8 md:mb-0">
+        <p class="text-gray-600 mb-4">Welcome to AI Emotion Predictor</p>
+        <p class="mb-4">Here, You can Upload your Own Facial Images or What are you Feeling to know about your Emotion.
+          This Tool can be used as a means of fun or in a way which can contribute to the Society</p>
+        <p class="font-bold text-lg">Developer: Yogesh</p>
+        <p class="font-bold text-lg">About This Web App</p>
+        <p>
+          Welcome to our web app, an advanced tool for detecting emotions from images and text. Developed as part of Yogesh's Master’s thesis, this platform integrates cutting-edge machine learning models with Google Cloud Platform (GCP) to provide real-time emotion analysis.
+        </p>
+
+          <p class="font-semibold">Our app features:</p>
+          
+          <p><strong>Image-Based Emotion Detection:</strong> Utilizing a model trained on diverse datasets, the app accurately identifies emotions from facial expressions in images.</p>
+          <p>
+            <strong>Text-Based Emotion Detection:</strong> By analyzing textual data, the app determines the emotional tone, identifying feelings like happiness, sadness, anger, and more.
+          </p>
+          
+          <p>
+            This project explores the intersection of computer vision, natural language processing, and cloud computing, resulting in a scalable, cloud-based solution. It’s designed for applications in fields like customer sentiment analysis, mental health assessment, and social media monitoring.
+          </p>
+          
+          <p><i>Thank you for exploring our platform. We hope it proves valuable for your needs.</i></p>
+        </p>
+      </div>
+      <div class="flex justify-center items-center">
+
+        <!-- <img src="/static/img/about-removebg-preview.png" alt="Emotions" class="w-96"> -->
+        <svg class="w-96" viewBox="0 0 658 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#clip0_1_16)">
+            <path
+              d="M586.857 664.379C586.857 684.055 470.438 700 326.817 700C183.196 700 66.777 684.055 66.777 664.379C66.777 644.704 183.196 628.759 326.817 628.759C470.438 628.759 586.857 644.72 586.857 664.379Z"
+              fill="#3C2177" />
+            <path
+              d="M561.648 560.342C690.132 432.155 690.132 224.324 561.648 96.1379C433.163 -32.0483 224.849 -32.0483 96.3644 96.1379C-32.1201 224.324 -32.1201 432.155 96.3644 560.342C224.849 688.528 433.163 688.528 561.648 560.342Z"
+              fill="#848EE7" fill-opacity="0.2" />
+            <path
+              d="M329.008 647.679C479.758 647.679 601.965 525.755 601.965 375.355C601.965 224.955 479.758 103.032 329.008 103.032C178.258 103.032 56.0512 224.955 56.0512 375.355C56.0512 525.755 178.258 647.679 329.008 647.679Z"
+              fill="#848EE7" fill-opacity="0.2" />
+            <path
+              d="M329.008 625.767C436.081 625.767 522.881 539.169 522.881 432.345C522.881 325.52 436.081 238.922 329.008 238.922C221.935 238.922 135.136 325.52 135.136 432.345C135.136 539.169 221.935 625.767 329.008 625.767Z"
+              fill="#848EE7" fill-opacity="0.2" />
+            <path
+              d="M331.348 635.794C340.657 633.789 385.751 622.628 417.484 589.423C412.541 584.903 404.155 574.35 396.741 560.279L330.458 570.586L264.175 560.279C256.761 574.35 248.375 584.903 243.432 589.423C275.181 622.611 320.276 633.772 329.585 635.794L329.601 636.156C329.601 636.156 329.914 636.09 330.458 635.992C331.002 636.107 331.315 636.156 331.315 636.156L331.348 635.794Z"
+              fill="#3C2177" />
+            <path
+              d="M232.525 589.917C201.55 583.884 146.669 581.632 122.499 594.437C98.3285 607.242 83.9779 639.148 137.36 666.023C190.742 692.899 258.475 667.026 312.351 666.533C366.227 666.023 382.588 677.579 404.254 673.815C458.641 678.335 525.764 663.607 536.902 638.622C550.082 609.034 517.559 581.122 471.229 583.128C424.898 585.133 415.079 579.117 392.918 608.508C341.81 620.063 331.727 620.819 315.877 609.017C300.011 597.215 292.465 607.768 280.124 604.497C267.767 601.226 254.422 581.139 232.525 589.917Z"
+              fill="#FFC7AB" />
+            <path
+              d="M263.994 278.685C248.128 293.002 214.896 291.49 206.081 314.355C197.267 337.22 206.839 374.139 268.014 377.163C329.206 380.171 392.391 375.651 407.253 373.399C422.114 371.131 452.825 362.846 444.521 329.182C436.217 295.517 409.773 298.788 400.201 269.398C390.628 240.007 410.531 185.746 361.416 179.713C321.907 176.196 303.273 240.254 263.994 278.685Z"
+              fill="#6F438F" />
+            <path
+              d="M362.504 183.478C378.749 183.1 392.342 209.663 388.19 235.47C384.038 261.277 376.294 285.77 400.464 300.284C424.635 314.799 437.469 335.132 416.71 356.797"
+              stroke="#43205C" stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M296.023 249.985C279.037 261.294 271.293 328.179 294.887 340.984C318.497 353.789 380.809 347.575 382.324 340.228C370.429 327.045 369.49 304.048 374.581 280.69C379.688 257.332 383.264 246.582 382.506 231.147C381.748 215.696 375.52 191.204 358.335 192.338C339.652 193.094 303.767 222.665 296.023 249.985Z"
+              fill="#4E256B" />
+            <path
+              d="M365.338 193.275C372.324 194.031 387.053 217.208 381.385 247.536C375.718 277.863 360.807 319.319 384.779 342.496"
+              stroke="#43205C" stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M301.691 267.885C292.432 280.131 319.436 311.412 305.843 334.573" stroke="#43205C"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M466.549 498.49C464.655 482.283 459.366 462.311 448.805 409.184C438.227 356.057 412.541 350.403 380.825 339.472C349.092 328.541 349.85 302.914 351.366 282.959L330.969 281.134V281.068L330.59 281.101L330.211 281.068V281.134L309.814 282.959C311.33 302.931 312.087 328.557 280.355 339.472C248.639 350.403 222.953 356.057 212.375 409.184C201.797 462.311 196.509 482.283 194.614 498.49C192.736 514.698 198.766 520.352 213.495 519.218C228.225 518.084 232.377 492.457 236.908 467.604C241.439 442.733 246.348 416.367 249.742 418.241C253.136 420.132 259.183 448.766 262.956 453.286C266.564 457.61 325.318 451.61 330.557 451.067C335.796 451.61 394.55 457.61 398.158 453.286C401.931 448.766 407.977 420.132 411.372 418.241C414.766 416.351 419.675 442.733 424.206 467.604C428.737 492.474 432.889 518.1 447.619 519.218C462.398 520.336 468.444 514.698 466.549 498.49Z"
+              fill="#FFC7AB" />
+            <path
+              d="M330.969 326.108C339.619 326.108 347.692 322.754 354.529 316.952C349.966 306.103 350.542 293.725 351.35 282.975L330.952 281.151V281.085L330.573 281.118L330.195 281.085V281.151L309.797 282.975C310.605 293.561 311.181 305.741 306.832 316.475C313.817 322.557 322.088 326.108 330.969 326.108Z"
+              fill="#C98665" fill-opacity="0.5" />
+            <path
+              d="M375.783 232.216C375.783 266.061 355.716 293.512 330.969 293.512C306.222 293.512 286.154 266.077 286.154 232.216C286.154 198.37 306.222 170.919 330.969 170.919C355.716 170.919 375.783 198.37 375.783 232.216Z"
+              fill="#FFC7AB" />
+            <path d="M313.406 224.556C313.406 231.147 303.207 232.659 301.131 224.375" stroke="black" stroke-width="2"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M295.084 246.977C295.084 253.009 299.994 257.908 306.041 257.908C312.087 257.908 316.997 253.009 316.997 246.977C316.997 240.944 312.087 236.046 306.041 236.046C299.994 236.046 295.084 240.944 295.084 246.977Z"
+              fill="#FF8C94" />
+            <path d="M313.406 206.096C309.814 204.962 304.146 205.537 300.752 209.104" stroke="#6F438F"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M398.01 473.866C403.974 451.758 409.427 425.638 409.427 425.638C394.533 404.039 393.528 375.388 394.039 344.255C382.11 339.735 372.192 334.705 372.192 334.705C376.657 355.301 387.58 419.112 333.951 419.112C333.704 428.087 331.447 438.295 327.904 449.078C327.558 438.246 327.245 428.005 326.998 419.112C273.352 419.112 284.293 355.301 288.757 334.705C288.757 334.705 278.822 339.735 266.91 344.255C267.405 375.404 266.416 404.039 251.522 425.638C251.522 425.638 256.992 451.758 262.94 473.866C268.904 495.975 274.852 528.637 260.946 565.803C266.12 567.726 281.739 570.553 297.655 571.654C357.314 578.838 392.012 568.794 400.02 565.803C386.081 528.637 392.045 495.975 398.01 473.866Z"
+              fill="#824FF1" />
+            <path
+              d="M445.197 483.417C427.155 481.526 382.621 473.242 363.113 459.681C343.606 446.119 342.502 440.465 343.968 417.107C345.435 393.749 337.708 380.928 334.033 383.196C330.359 385.464 330.722 413.721 331.463 438.591C332.205 463.461 329.255 472.124 339.932 478.535C350.608 484.945 398.817 511.311 423.844 519.234C454.028 529.409 467.637 522.242 465.808 501.909C463.963 481.526 445.197 483.417 445.197 483.417Z"
+              fill="#FFC7AB" />
+            <path
+              d="M217.252 483.417C235.293 481.526 279.828 473.242 299.335 459.681C318.843 446.119 319.946 440.465 318.48 417.107C317.014 393.749 324.741 380.928 328.415 383.196C332.089 385.464 331.727 413.721 330.985 438.591C330.244 463.461 333.193 472.124 322.517 478.535C311.84 484.945 263.632 511.311 238.605 519.234C208.421 529.409 194.812 522.242 196.64 501.909C198.469 481.526 217.252 483.417 217.252 483.417Z"
+              fill="#FFC7AB" />
+            <path
+              d="M318.562 418.586C318.53 418.093 318.497 417.6 318.464 417.09C316.997 393.732 324.724 380.911 328.399 383.179C332.073 385.448 331.71 413.704 330.969 438.575C330.425 457.182 331.924 466.716 328.25 473.028"
+              stroke="#C98665" stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M362.685 181.604C363.443 152.213 317.541 131.403 296.979 159.002C282.76 178.086 298.742 180.733 269.53 206.606C237.979 234.55 271.54 261.491 260.221 278.455C248.886 295.419 208.355 318.514 235.54 357.339C262.725 396.149 302.531 358.293 300.752 335.231C298.231 302.701 277.504 284.225 292.695 266.899C309.435 247.815 311.84 239.892 310.325 219.92C308.809 199.948 323.917 163.9 354.019 183.116C360.807 187.62 362.306 184.99 362.685 181.604Z"
+              fill="#895CAB" />
+            <path
+              d="M332.106 164.772C317.59 166.629 311 186.552 310.868 209.449C314.015 189.872 328.712 166.958 354.019 183.116C355.683 184.217 357.034 184.891 358.121 185.237C353.574 175.029 346.786 162.898 332.106 164.772Z"
+              fill="#6F438F" />
+            <path d="M213.133 490.699C216.412 487.181 221.948 483.154 236.051 480.655" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M175.617 612.535C186.689 603.987 227.994 601.982 271.54 620.573C315.103 639.164 328.942 646.446 363.196 638.654C397.433 630.863 422.608 632.622 422.114 647.942C421.62 663.262 416.578 672.302 405.753 673.568"
+              stroke="#C98665" stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M221.684 607.012C221.437 597.215 232.014 587.418 246.365 588.667" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M421.867 644.934C422.625 650.703 416.578 652.725 409.032 651.722C404.995 652.479 403.496 652.232 403.496 652.232"
+              stroke="#C98665" stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M405.49 658.248C409.526 658.741 418.588 659.251 420.845 656.489" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M404.106 663.525C407.879 664.281 417.319 665.037 419.346 662.769" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M401.717 668.801C404.732 670.05 411.536 671.563 414.304 669.804" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M393.413 608.015C412.805 601.489 469.202 593.451 487.573 614.803" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M227.994 593.944C224.979 597.971 231.52 602.492 240.582 601.735C242.098 603.248 244.866 604.004 244.866 604.004"
+              stroke="#C98665" stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M223.2 600.979C222.705 604.25 230.762 606.502 236.298 606.009" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M330.178 400.834C327.657 401.59 326.652 415.661 326.652 427.216" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M329.898 389.031C327.377 388.785 323.604 398.582 322.846 420.181" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M344.512 418.586C344.545 418.093 344.578 417.6 344.611 417.09C346.077 393.732 338.35 380.911 334.676 383.179C331.002 385.448 331.364 413.704 332.106 438.575C332.649 457.182 331.15 466.716 334.824 473.028"
+              stroke="#C98665" stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M332.88 400.834C335.401 401.59 336.406 415.661 336.406 427.216" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M333.16 389.031C335.681 388.785 339.454 398.582 340.212 420.181" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M357.973 184.415C352.305 169.719 339.273 157.851 324.543 168.207C309.814 178.563 310.193 208.907 310.193 223.98"
+              stroke="#43205C" stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M318.002 175.686C323.67 169.095 338.531 169.062 345.88 179.04" stroke="#43205C"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M313.966 184.793C316.239 179.516 327.558 176.689 333.226 178.579" stroke="#43205C"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M233.53 309.144C225.786 323.083 218.801 341.74 240.895 364.161" stroke="#43205C"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M310.325 148.581C295.216 157.819 314.724 181.407 279.778 204.584C244.849 227.761 279.218 248.67 275.445 279.951C271.672 311.232 221.256 324.037 239.379 360.578"
+              stroke="#43205C" stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M347.016 224.556C347.016 231.147 357.215 232.659 359.291 224.375" stroke="black" stroke-width="2"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M325.482 242.834C328.119 246.04 332.666 246.796 336.439 243.015" stroke="#C98665"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path d="M323.126 256.198C325.202 262.412 334.083 265.239 338.795 256.001" stroke="#DB6C73"
+              stroke-miterlimit="10" stroke-linecap="round" />
+            <path
+              d="M365.338 246.977C365.338 253.009 360.428 257.908 354.381 257.908C348.335 257.908 343.425 253.009 343.425 246.977C343.425 240.944 348.335 236.046 354.381 236.046C360.428 236.046 365.338 240.944 365.338 246.977Z"
+              fill="#FF8C94" />
+            <path d="M347.016 206.096C350.608 204.962 356.276 205.537 359.67 209.104" stroke="#6F438F"
+              stroke-miterlimit="10" stroke-linecap="round" />
+          </g>
+          <defs>
+            <clipPath id="clip0_1_16">
+              <rect width="658" height="700" fill="white" />
+            </clipPath>
+          </defs>
+        </svg>
+
+        <!-- <div class="text-center">
+                    <img src="path_to_happiness_icon.png" alt="Happiness" class="mx-auto mb-2">
+                    <p>happiness</p>
+                    <p class="font-bold">100%</p>
+                </div>
+                <div class="text-center">
+                    <img src="path_to_sadness_icon.png" alt="Sadness" class="mx-auto mb-2">
+                    <p>sadness</p>
+                    <p class="font-bold">98%</p>
+                </div>
+                <div class="text-center">
+                    <img src="path_to_anger_icon.png" alt="Anger" class="mx-auto mb-2">
+                    <p>anger</p>
+                    <p class="font-bold">96%</p>
+                </div>
+                <div class="text-center">
+                    <img src="path_to_surprise_icon.png" alt="Surprise" class="mx-auto mb-2">
+                    <p>surprise</p>
+                    <p class="font-bold">90%</p>
+                </div>
+                <div class="text-center">
+                    <img src="path_to_fear_icon.png" alt="Fear" class="mx-auto mb-2">
+                    <p>fear</p>
+                    <p class="font-bold">88%</p>
+                </div>
+                <div class="text-center">
+                    <img src="path_to_disgust_icon.png" alt="Disgust" class="mx-auto mb-2">
+                    <p>disgust</p>
+                    <p class="font-bold">89%</p>
+                </div>
+                <div class="text-center">
+                    <img src="path_to_neutral_icon.png" alt="Neutral" class="mx-auto mb-2">
+                    <p>neutral</p>
+                    <p class="font-bold">100%</p>
+                </div> -->
+      </div>
+    </div>
+
+    <!-- Chatbot Icon -->
+    <div id="chatbot-icon"
+      class="fixed bottom-6 right-6 bg-black text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg cursor-pointer">
+      <svg fill="#ffffff" viewBox="0 0 128 128" id="Layer_1" version="1.1" xml:space="preserve"
+        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" stroke="#ffffff">
+        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+        <g id="SVGRepo_iconCarrier">
+          <g>
+            <path
+              d="M65,2C30.8,2,3,29.8,3,64c0,15.8,5.9,30.8,16.7,42.3l-13.8,13v6.7H65c34.2,0,62-27.8,62-62S99.2,2,65,2z M65,118H18.9 l12.3-11.5l-4.3-4.3C16.6,92,11,78.4,11,64c0-29.8,24.2-54,54-54s54,24.2,54,54S94.8,118,65,118z">
+            </path>
+            <path
+              d="M64.3,80.6c-6.4-4.1-11.8-9.7-15.7-16.3l6.7-6.7V39.7H33.7C33.7,71,59,96.3,90.3,96.3V74.8l-20.2,0L64.3,80.6z">
+            </path>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Chatbot Container -->
+    <div id="chatbot-container"
+      class="fixed bottom-24 right-6 bg-white border rounded-lg shadow-lg w-80 h-96 hidden flex flex-col">
+      <div class="p-4 bg-black text-white flex justify-between items-center rounded-t-lg">
+        <h2 class="text-lg">Chatbot</h2>
+        <button id="chatbot-close" class="text-white focus:outline-none">
+          <svg fill="#ffffff" viewBox="0 0 128 128" id="Layer_1" version="1.1" xml:space="preserve"
+            xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" stroke="#ffffff">
+            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+            <g id="SVGRepo_iconCarrier">
+              <g>
+                <path
+                  d="M65,2C30.8,2,3,29.8,3,64c0,15.8,5.9,30.8,16.7,42.3l-13.8,13v6.7H65c34.2,0,62-27.8,62-62S99.2,2,65,2z M65,118H18.9 l12.3-11.5l-4.3-4.3C16.6,92,11,78.4,11,64c0-29.8,24.2-54,54-54s54,24.2,54,54S94.8,118,65,118z">
+                </path>
+                <path
+                  d="M64.3,80.6c-6.4-4.1-11.8-9.7-15.7-16.3l6.7-6.7V39.7H33.7C33.7,71,59,96.3,90.3,96.3V74.8l-20.2,0L64.3,80.6z">
+                </path>
+              </g>
+            </g>
+          </svg>
+        </button>
+      </div>
+      <div id="chatbot-content" class="flex-grow p-4 overflow-y-auto">
+        <!-- Chatbot messages will go here -->
+      </div>
+      <div class="p-4 border-t">
+        <input id="chatbot-input" type="text" class="w-full border rounded px-3 py-2"
+          placeholder="Type your message..." />
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t p-6">
+    <div class="md:flex justify-between items-center">
+      <div class="">
+        <div class="text-gray-700 font-semibold mb-5">AI Emotion Predictor</div>
+        <div class="flex items-center justify-center space-x-4 md:mt-0">
+          <!-- FACEBOOK -->
+          <a href="#" class="text-gray-700 hover:text-black">
+            <svg class="w-[32px]" fill="#828282" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"
+              stroke="#828282">
+              <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+              <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+              <g id="SVGRepo_iconCarrier">
+                <title>facebook</title>
+                <path
+                  d="M30.996 16.091c-0.001-8.281-6.714-14.994-14.996-14.994s-14.996 6.714-14.996 14.996c0 7.455 5.44 13.639 12.566 14.8l0.086 0.012v-10.478h-3.808v-4.336h3.808v-3.302c-0.019-0.167-0.029-0.361-0.029-0.557 0-2.923 2.37-5.293 5.293-5.293 0.141 0 0.281 0.006 0.42 0.016l-0.018-0.001c1.199 0.017 2.359 0.123 3.491 0.312l-0.134-0.019v3.69h-1.892c-0.086-0.012-0.185-0.019-0.285-0.019-1.197 0-2.168 0.97-2.168 2.168 0 0.068 0.003 0.135 0.009 0.202l-0.001-0.009v2.812h4.159l-0.665 4.336h-3.494v10.478c7.213-1.174 12.653-7.359 12.654-14.814v-0z">
+                </path>
+              </g>
+            </svg>
+          </a>
+          <!-- LINKEDIN -->
+          <a href="#" class="text-gray-700 hover:text-black">
+            <svg class="w-[35px]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+              <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+              <g id="SVGRepo_iconCarrier">
+                <path
+                  d="M18.72 3.99997H5.37C5.19793 3.99191 5.02595 4.01786 4.86392 4.07635C4.70189 4.13484 4.55299 4.22471 4.42573 4.34081C4.29848 4.45692 4.19537 4.59699 4.12232 4.75299C4.04927 4.909 4.0077 5.07788 4 5.24997V18.63C4.01008 18.9901 4.15766 19.3328 4.41243 19.5875C4.6672 19.8423 5.00984 19.9899 5.37 20H18.72C19.0701 19.9844 19.4002 19.8322 19.6395 19.5761C19.8788 19.32 20.0082 18.9804 20 18.63V5.24997C20.0029 5.08247 19.9715 4.91616 19.9078 4.76122C19.8441 4.60629 19.7494 4.466 19.6295 4.34895C19.5097 4.23191 19.3672 4.14059 19.2108 4.08058C19.0544 4.02057 18.8874 3.99314 18.72 3.99997ZM9 17.34H6.67V10.21H9V17.34ZM7.89 9.12997C7.72741 9.13564 7.5654 9.10762 7.41416 9.04768C7.26291 8.98774 7.12569 8.89717 7.01113 8.78166C6.89656 8.66615 6.80711 8.5282 6.74841 8.37647C6.6897 8.22474 6.66301 8.06251 6.67 7.89997C6.66281 7.73567 6.69004 7.57169 6.74995 7.41854C6.80986 7.26538 6.90112 7.12644 7.01787 7.01063C7.13463 6.89481 7.2743 6.80468 7.42793 6.74602C7.58157 6.68735 7.74577 6.66145 7.91 6.66997C8.07259 6.66431 8.2346 6.69232 8.38584 6.75226C8.53709 6.8122 8.67431 6.90277 8.78887 7.01828C8.90344 7.13379 8.99289 7.27174 9.05159 7.42347C9.1103 7.5752 9.13699 7.73743 9.13 7.89997C9.13719 8.06427 9.10996 8.22825 9.05005 8.3814C8.99014 8.53456 8.89888 8.6735 8.78213 8.78931C8.66537 8.90513 8.5257 8.99526 8.37207 9.05392C8.21843 9.11259 8.05423 9.13849 7.89 9.12997ZM17.34 17.34H15V13.44C15 12.51 14.67 11.87 13.84 11.87C13.5822 11.8722 13.3313 11.9541 13.1219 12.1045C12.9124 12.2549 12.7546 12.4664 12.67 12.71C12.605 12.8926 12.5778 13.0865 12.59 13.28V17.34H10.29V10.21H12.59V11.21C12.7945 10.8343 13.0988 10.5225 13.4694 10.3089C13.84 10.0954 14.2624 9.98848 14.69 9.99997C16.2 9.99997 17.34 11 17.34 13.13V17.34Z"
+                  fill="#828282"></path>
+              </g>
+            </svg>
+          </a>
+          <!-- YT -->
+          <a href="#" class="text-gray-700 hover:text-black">
+            <svg class="w-[32px]" viewBox="0 -3 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg"
+              xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000">
+              <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+              <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+              <g id="SVGRepo_iconCarrier">
+                <title>youtube [#828282168]</title>
+                <desc>Created with Sketch.</desc>
+                <defs> </defs>
+                <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                  <g id="Dribbble-Light-Preview" transform="translate(-300.000000, -7442.000000)" fill="#828282">
+                    <g id="icons" transform="translate(56.000000, 160.000000)">
+                      <path
+                        d="M251.988432,7291.58588 L251.988432,7285.97425 C253.980638,7286.91168 255.523602,7287.8172 257.348463,7288.79353 C255.843351,7289.62824 253.980638,7290.56468 251.988432,7291.58588 M263.090998,7283.18289 C262.747343,7282.73013 262.161634,7282.37809 261.538073,7282.26141 C259.705243,7281.91336 248.270974,7281.91237 246.439141,7282.26141 C245.939097,7282.35515 245.493839,7282.58153 245.111335,7282.93357 C243.49964,7284.42947 244.004664,7292.45151 244.393145,7293.75096 C244.556505,7294.31342 244.767679,7294.71931 245.033639,7294.98558 C245.376298,7295.33761 245.845463,7295.57995 246.384355,7295.68865 C247.893451,7296.0008 255.668037,7296.17532 261.506198,7295.73552 C262.044094,7295.64178 262.520231,7295.39147 262.895762,7295.02447 C264.385932,7293.53455 264.28433,7285.06174 263.090998,7283.18289"
+                        id="youtube-[#828282168]"> </path>
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </svg>
+          </a>
+          <!-- INSTA -->
+          <a href="#" class="text-gray-700 hover:text-black">
+            <svg class="w-[40px]" viewBox="0 -0.5 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+              <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+              <g id="SVGRepo_iconCarrier">
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M15.5 5H9.5C7.29086 5 5.5 6.79086 5.5 9V15C5.5 17.2091 7.29086 19 9.5 19H15.5C17.7091 19 19.5 17.2091 19.5 15V9C19.5 6.79086 17.7091 5 15.5 5Z"
+                  stroke="#828282" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M12.5 15C10.8431 15 9.5 13.6569 9.5 12C9.5 10.3431 10.8431 9 12.5 9C14.1569 9 15.5 10.3431 15.5 12C15.5 12.7956 15.1839 13.5587 14.6213 14.1213C14.0587 14.6839 13.2956 15 12.5 15Z"
+                  stroke="#828282" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                <rect x="15.5" y="9" width="2" height="2" rx="1" transform="rotate(-90 15.5 9)" fill="#828282"></rect>
+                <rect x="16" y="8.5" width="1" height="1" rx="0.5" transform="rotate(-90 16 8.5)" stroke="#828282"
+                  stroke-linecap="round"></rect>
+              </g>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div class="hidden md:block text-gray-500">
+        <a href="{{ url_for('image_prediction') }}" class="hover:text-black">Emotion Prediction through Image</a> |
+        <a href="{{ url_for('text_prediction') }}" class="hover:text-black">Emotion Prediction through Text</a> |
+        <a href="{{ url_for('about') }}" class="hover:text-black">About</a>
+      </div>
+    </div>
+  </footer>
+</body>
+
+</html>
